@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forum-bookmark-manager"
+version = "0.2.1"
+description = "Local forum favorite crawler and database browser"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "THZH" },
+]
+dependencies = [
+  "beautifulsoup4>=4.13",
+  "fastapi>=0.115",
+  "httpx>=0.28",
+  "pillow>=11.0",
+  "playwright>=1.50",
+  "uvicorn>=0.34",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2",
+  "pytest>=8.3",
+]
+
+[project.scripts]
+forum-bookmark-manager = "forum_bookmark_manager.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+forum_bookmark_manager = ["static/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

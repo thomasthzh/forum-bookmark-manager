@@ -1,0 +1,26 @@
+﻿start_url = "https://primary.example.test/home.php?mod=space&do=favorite&type=all&page=1"
+site_base_urls = ["https://primary.example.test", "https://mirror.example.test"]
+detail_concurrency = 8
+image_concurrency = 9
+favorite_page_concurrency = 5
+edge_profile_wait_seconds = 600
+retry_count = 2
+request_delay_seconds = 1.2
+image_delay_seconds = 0.35
+post_render_wait_seconds = 2.0
+post_scroll_steps = 8
+post_scroll_delay_seconds = 0.35
+database_path = "data/bookmarks.sqlite3"
+edge_profile_dir = "data/edge-profile"
+edge_profile_mode = "managed"
+edge_user_data_dir = "%LOCALAPPDATA%/Microsoft/Edge/User Data"
+edge_profile_directory = "Default"
+proxy_server = ""
+clash_config_path = ""
+clash_proxy_group = "节点选择"
+clash_region_keywords = ["香港", "HK", "Hong", "新加坡", "SG", "Singapore", "狮城"]
+clash_switch_wait_seconds = 10.0
+clash_recovery_attempts = 3
+image_dir = "data/images"
+thumbnail_dir = "data/thumbnails"
+selector_profile_path = "data/selector-profile.json"

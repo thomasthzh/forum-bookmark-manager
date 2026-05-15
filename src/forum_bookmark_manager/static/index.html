@@ -1,0 +1,162 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>收藏管理器</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <h1>收藏管理器</h1>
+      <section class="filter-section">
+        <h2>状态</h2>
+        <div class="filter-grid" data-group="status">
+          <button class="active" data-value="">全部</button>
+          <button data-value="未下载">未下载</button>
+          <button data-value="已下载">已下载</button>
+          <button data-value="链接失效">链接失效</button>
+        </div>
+      </section>
+      <section class="filter-section">
+        <h2>类型</h2>
+        <div id="type-filters" class="filter-grid" data-group="type">
+          <button class="active" data-value="">全部类型</button>
+        </div>
+      </section>
+      <section class="filter-section">
+        <h2>爬取反馈</h2>
+        <div id="progress" class="progress">等待爬取</div>
+      </section>
+      <section class="filter-section">
+        <div class="section-heading">
+          <h2>Clash 联动</h2>
+          <span id="clash-state">检测中</span>
+        </div>
+        <div id="clash-panel" class="clash-panel">正在读取 ClashVerge 状态</div>
+        <button id="clash-switch" class="wide-button">切换香港/新加坡线路</button>
+      </section>
+      <section class="filter-section">
+        <div class="section-heading">
+          <h2>无头标签页</h2>
+          <span id="headless-tab-count">0 个</span>
+        </div>
+        <div class="tab-toolbar">
+          <button id="manage-headless-tabs">管理标签页</button>
+          <button id="refresh-headless-tabs">刷新</button>
+        </div>
+        <div id="headless-tabs" class="headless-tabs">暂无无头标签页</div>
+      </section>
+    </aside>
+
+    <main class="content">
+      <div class="toolbar">
+        <input id="search" placeholder="搜索标题、解压密码、链接说明文字">
+        <button id="sort-new" class="active">新到旧</button>
+        <button id="sort-old">旧到新</button>
+        <button id="annotate">标注模式</button>
+        <button id="crawl">开始爬取</button>
+      </div>
+      <div id="bulk-bar" class="bulk-bar">
+        <span id="selected-count">已选 0 项</span>
+        <button id="select-all">一键全选当前筛选</button>
+        <button id="clear-selection">取消选择</button>
+        <button data-bulk-status="已下载">标为已下载</button>
+        <button data-bulk-status="链接失效">标为链接失效</button>
+        <button data-bulk-status="未下载">标为未下载</button>
+        <button id="bulk-delete" class="danger-button">删除选中</button>
+      </div>
+      <div id="summary" class="summary"></div>
+      <div id="posts" class="posts"></div>
+    </main>
+  </div>
+
+  <dialog id="crawl-dialog" class="crawl-dialog">
+    <form method="dialog" class="crawl-form">
+      <h2>论坛收藏抓取</h2>
+      <p>请输入论坛收藏功能的链接。工具会从该页开始，自动翻页抓取所有收藏链接。</p>
+      <label>
+        抓取模式
+        <select id="crawl-mode">
+          <option value="forum_favorites" selected>论坛收藏抓取</option>
+        </select>
+      </label>
+      <label>
+        收藏页链接
+        <input
+          id="crawl-start-url"
+          value="https://primary.example.test/home.php?mod=space&do=favorite&type=all&page=1"
+          placeholder="https://.../home.php?mod=space&do=favorite&page=1"
+        >
+      </label>
+      <label>
+        镜像网址
+        <input
+          id="crawl-mirror-url"
+          value="https://mirror.example.test"
+          placeholder="https://mirror.example.test"
+        >
+      </label>
+      <div class="dialog-actions">
+        <button value="cancel">取消</button>
+        <button id="confirm-crawl" value="default" class="active">开始爬取</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="annotate-dialog" class="crawl-dialog">
+    <form method="dialog" class="crawl-form">
+      <h2>标注帖子结构</h2>
+      <p>输入一篇真实帖子链接。工具会打开新窗口，你可以像检查元素一样点击标题、正文、图片、解压码和下载链接区域。</p>
+      <label>
+        帖子链接
+        <input
+          id="annotate-target-url"
+          placeholder="https://.../thread-xxxx-1-1.html"
+        >
+      </label>
+      <div class="dialog-actions">
+        <button value="cancel">取消</button>
+        <button id="confirm-annotate" value="default" class="active">打开标注窗口</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="headless-dialog" class="tabs-dialog">
+    <form method="dialog" class="tabs-form">
+      <div class="tabs-dialog-heading">
+        <div>
+          <h2>无头标签页管理</h2>
+          <p id="headless-dialog-summary">当前 0 个无头标签页</p>
+        </div>
+        <button value="cancel">关闭</button>
+      </div>
+      <div class="tabs-dialog-actions">
+        <button id="refresh-headless-tabs-dialog" type="button">刷新列表</button>
+        <button id="close-all-headless-tabs" type="button" class="danger-button">关闭全部</button>
+      </div>
+      <div id="headless-tabs-detail" class="headless-tabs-detail"></div>
+    </form>
+  </dialog>
+
+  <dialog id="image-dialog" class="image-dialog">
+    <div class="image-viewer">
+      <div class="image-viewer-toolbar">
+        <button id="image-prev" type="button">上一张</button>
+        <div>
+          <strong id="image-title">图片</strong>
+          <span id="image-counter">0 / 0</span>
+        </div>
+        <button id="image-next" type="button">下一张</button>
+        <button id="image-close" type="button">关闭</button>
+      </div>
+      <div class="image-stage">
+        <img id="viewer-image" alt="帖子图片">
+      </div>
+      <div id="image-filmstrip" class="image-filmstrip"></div>
+    </div>
+  </dialog>
+  <script src="/static/app.js"></script>
+</body>
+</html>

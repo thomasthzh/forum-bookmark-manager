@@ -1,0 +1,16 @@
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+data/
+.superpowers/
+.tmp-http-test/
+config/settings.toml
+config/settings.local.toml
+dist/
+build/
+*.log
+*.sqlite
+*.sqlite3
