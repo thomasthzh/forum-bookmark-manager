@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Compile Include="..\TestSupport\TestAssert.cs" Link="TestSupport\TestAssert.cs" />
+    <ProjectReference Include="..\..\src\Rfbm.Native\Rfbm.Native.csproj" />
+    <ProjectReference Include="..\..\src\Rfbm.Core\Rfbm.Core.csproj" />
+    <ProjectReference Include="..\..\src\Rfbm.Data\Rfbm.Data.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,94 @@
+[data-rfbm-ui="panel"].rfbm-selector-panel {
+  all: initial;
+  box-sizing: border-box;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2147483647;
+  width: 340px;
+  padding: 18px;
+  border: 1px solid #3b4658;
+  border-radius: 14px;
+  background: #111827;
+  box-shadow: 0 22px 55px rgb(0 0 0 / 38%);
+  color: #f8fafc;
+  font: 14px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+[data-rfbm-ui="panel"] *,
+[data-rfbm-ui="panel"] *::before,
+[data-rfbm-ui="panel"] *::after {
+  box-sizing: border-box;
+  font: inherit;
+}
+
+[data-rfbm-ui="panel"] strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+[data-rfbm-ui="panel"] p {
+  margin: 6px 0 12px;
+  color: #aeb9ca;
+}
+
+[data-rfbm-ui="panel"] select,
+[data-rfbm-ui="panel"] code {
+  display: block;
+  width: 100%;
+  border: 1px solid #46546a;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+[data-rfbm-ui="panel"] select {
+  padding: 8px 10px;
+}
+
+[data-rfbm-ui="panel"] code {
+  min-height: 42px;
+  margin-top: 10px;
+  padding: 9px 10px;
+  overflow-wrap: anywhere;
+  color: #67e8f9;
+  font-family: Consolas, monospace;
+}
+
+[data-rfbm-ui="panel"] [data-role="status"] {
+  min-height: 21px;
+  margin-bottom: 8px;
+}
+
+.rfbm-selector-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+[data-rfbm-ui="panel"] button {
+  padding: 7px 11px;
+  border: 1px solid #526078;
+  border-radius: 8px;
+  background: #263449;
+  color: #e5edf7;
+  cursor: pointer;
+}
+
+[data-rfbm-ui="panel"] button:hover {
+  background: #34445c;
+}
+
+[data-rfbm-ui="panel"] button.rfbm-primary {
+  border-color: #0891b2;
+  background: #0e7490;
+  color: #fff;
+}
+
+.rfbm-selector-hover {
+  outline: 3px solid #06b6d4 !important;
+  outline-offset: 2px !important;
+  cursor: crosshair !important;
+}

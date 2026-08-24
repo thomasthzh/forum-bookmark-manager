@@ -1,0 +1,54 @@
+<Window x:Class="Rfbm.Native.LegacyImportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Style="{StaticResource AppWindowStyle}"
+        Title="导入旧 Python 收藏库"
+        Width="600"
+        Height="360"
+        MinWidth="540"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="迁移旧版收藏" FontSize="23" FontWeight="SemiBold" />
+            <TextBlock Margin="0,8,0,0"
+                       Foreground="{StaticResource SecondaryTextBrush}"
+                       Text="源 SQLite 只读打开，不会修改或删除。已有人工状态、星标、笔记和标签会保留。"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,22,0,0">
+            <TextBlock Text="旧版 SQLite 文件" FontWeight="SemiBold" />
+            <DockPanel Margin="0,7,0,0">
+                <Button DockPanel.Dock="Right" Margin="8,0,0,0" Content="浏览…" Click="Browse_Click" />
+                <TextBox x:Name="SourcePathBox" IsReadOnly="True" />
+            </DockPanel>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,18,0,0">
+            <TextBlock Text="统一站点家族标识（可选）" FontWeight="SemiBold" />
+            <TextBox x:Name="SiteFamilyBox" Margin="0,7,0,0" />
+            <TextBlock Margin="0,5,0,0"
+                       FontSize="11"
+                       Foreground="{StaticResource SecondaryTextBrush}"
+                       Text="留空时按每条 URL 的主机名识别；有多个镜像时建议填写同一个稳定标识。" />
+        </StackPanel>
+
+        <TextBlock x:Name="ErrorText" Grid.Row="3" Margin="0,12,0,0"
+                   Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Width="92" Margin="0,0,10,0" Content="取消" IsCancel="True" Click="Cancel_Click" />
+            <Button Width="132" Style="{StaticResource PrimaryButton}" Content="开始只读导入" IsDefault="True" Click="Import_Click" />
+        </StackPanel>
+    </Grid>
+</Window>
