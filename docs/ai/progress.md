@@ -1,19 +1,20 @@
 # R-fbm AI 进度
 
-日期：2026-08-24
+日期：2026-09-22
 
 ## 当前状态
 
-- 工作分支：`codex/R-fbm-native-probe`
+- 工作分支：`codex/rfbm-live-structure`
 - 在独立 Git worktree 中开发，未覆盖主仓库的用户改动。
 - 主仓库的用户未提交改动未被覆盖。
 - 完整重构已进入最终隐私验收与提交阶段。
+- 已按真实 Discuz X3.4 页面形状校准标题分类、首楼层级、带后缀计数、登录提示页和收藏分页参数；脱敏事实见 `docs/ai/live-structure-probe.md`。
 
 ## 已验证证据
 
 - 原 Python 基线：`py -3.13 -m pytest -q` → 72 passed。
 - `scripts/verify.ps1`：Release restore/build 0 warnings / 0 errors，Core、Data、BrowserBridge、Collection、Native 五套 runner 全部通过。
-- `dotnet format R-fbm.sln --verify-no-changes --no-restore`：通过。
+- `scripts/verify.ps1 -NoRestore`：再次通过；`dotnet format --verify-no-changes` 在当前 Windows 工作树命中既有全仓行尾/空格差异，未强行重排未改文件。
 - Edge 扩展 `background.js`、`content.js` 语法检查：通过。
 - Core、Data、BrowserBridge、Collection、Native runner 均在开发迭代中通过。
 - Playwright 使用本机 Edge channel 获取 loopback fixture 成功。
