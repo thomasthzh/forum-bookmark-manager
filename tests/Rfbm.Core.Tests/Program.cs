@@ -38,7 +38,7 @@ TestAssert.Throws<InvalidOperationException>(() => _ = empty.Value);
 var favoritesHtml = File.ReadAllText(Path.Combine(fixtureRoot, "favorites-page-1.html"));
 var favoritePage = DiscuzPageParser.ParseFavorites(
     favoritesHtml,
-    new Uri("https://primary.example.test/home.php?mod=space&do=favorite&type=all&page=1"),
+    new Uri("https://primary.example.test/home.php?mod=space&do=favorite&uid=42&view=me&type=all&page=1"),
     "example-forum");
 TestAssert.Equal(2, favoritePage.Items.Count);
 TestAssert.Equal("2730872", favoritePage.Items[0].Key.ThreadId);
@@ -47,11 +47,14 @@ TestAssert.Equal("2026-05-13 10:20", favoritePage.Items[0].RawFavoriteTime);
 TestAssert.Equal(false, favoritePage.Items[0].FavoriteTime is null);
 TestAssert.Equal("昨天 23:10", favoritePage.Items[1].RawFavoriteTime);
 TestAssert.Equal<DateTimeOffset?>(null, favoritePage.Items[1].FavoriteTime);
-TestAssert.Equal(60, favoritePage.Pagination.MaxPage);
-TestAssert.Equal(60, favoritePage.Pagination.PageUrls.Count);
+TestAssert.Equal(62, favoritePage.Pagination.MaxPage);
+TestAssert.Equal(62, favoritePage.Pagination.PageUrls.Count);
 TestAssert.Equal(
-    "https://primary.example.test/home.php?mod=space&do=favorite&type=all&page=2",
+    "https://primary.example.test/home.php?mod=space&do=favorite&uid=42&view=me&type=all&page=2",
     favoritePage.Pagination.NextUrl);
+TestAssert.Equal(
+    "https://primary.example.test/home.php?mod=space&do=favorite&uid=42&view=me&type=all&page=62",
+    favoritePage.Pagination.PageUrls[^1]);
 
 var emptyFavorites = DiscuzPageParser.ParseFavorites(
     "<main id='ct'>您还没有添加任何收藏</main><footer id='ft'><a href='thread-999-1-1.html'>帮助</a></footer>",
@@ -95,6 +98,16 @@ TestAssert.Equal("magnet:?xt=urn:btih:12345", post.ResourceLinks[1].Url);
 TestAssert.Equal(
     "https://mirror.example.test/forum.php?mod=attachment&aid=preview1",
     post.ResourceLinks[2].Url);
+
+var discuzX34Html = File.ReadAllText(Path.Combine(fixtureRoot, "discuz-x34-shape.html"));
+var discuzX34Post = DiscuzPageParser.ParseThread(
+    discuzX34Html,
+    new Uri("https://primary.example.test/forum.php?mod=viewthread&tid=2730999"),
+    "example-forum");
+TestAssert.Equal("[工具] 示例资源标题", discuzX34Post.Title);
+TestAssert.Equal("工具", discuzX34Post.Type);
+TestAssert.Equal(4_333_000, discuzX34Post.VisitCount.Value);
+TestAssert.Equal("这是脱敏的 Discuz X3.4 结构样例。 正文只用于验证首楼选择器和计数提取。", discuzX34Post.BodyText.Value);
 
 var valid = PageValidation.ValidateThread(
     threadHtml,

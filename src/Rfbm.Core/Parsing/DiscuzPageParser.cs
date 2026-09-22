@@ -220,7 +220,18 @@ public static partial class DiscuzPageParser
 
   private static string ExtractTitle(IDocument document)
   {
-    foreach (var selector in new[] { "#thread_subject", "h1", ".ts span", ".ts" })
+    var subject = CleanText(document.QuerySelector("#thread_subject")?.TextContent ?? string.Empty);
+    if (subject.Length > 0)
+    {
+      // Discuz X3.4 themes commonly keep the board/category prefix in an
+      // adjacent h1.ts link and the actual subject in #thread_subject.
+      var prefix = CleanText(document.QuerySelector("h1.ts > a, h1.ts a, .ts > a")?.TextContent ?? string.Empty);
+      return prefix.Length > 0 && !subject.StartsWith(prefix, StringComparison.Ordinal)
+          ? $"{prefix} {subject}"
+          : subject;
+    }
+
+    foreach (var selector in new[] { "h1", ".ts span", ".ts" })
     {
       var title = CleanText(document.QuerySelector(selector)?.TextContent ?? string.Empty);
       if (title.Length > 0)
@@ -236,11 +247,21 @@ public static partial class DiscuzPageParser
 
   private static string DetectProjectType(IDocument document, string title, string bodyText)
   {
-    var breadcrumbs = document.QuerySelectorAll("#pt a, .z a")
+    var breadcrumbs = document.QuerySelectorAll("#pt a, .z a, h1.ts > a, h1.ts a, .deanjstop h3 a")
         .Select(anchor => CleanText(anchor.TextContent))
         .Where(text => text.Length > 0)
         .Distinct(StringComparer.Ordinal)
         .ToArray();
+
+    foreach (var label in breadcrumbs.Concat(new[] { title }))
+    {
+      var bracket = BracketedTypeRegex().Match(label);
+      if (bracket.Success)
+      {
+        return bracket.Groups[1].Value.Trim();
+      }
+    }
+
     foreach (var text in breadcrumbs.Concat(new[] { title, bodyText }))
     {
       if (text.Contains("游戏", StringComparison.OrdinalIgnoreCase) ||
@@ -267,14 +288,10 @@ public static partial class DiscuzPageParser
   {
     var labelExpression = string.Join('|', labels.Select(Regex.Escape));
     var regex = new Regex(
-        $@"(?:{labelExpression})\s*(?:次数|次數)?\s*[:：]?\s*(\d[\d,]*)",
+        $@"(?:{labelExpression})\s*(?:次数|次數)?\s*[:：]?\s*(?<number>\d[\d,.]*)\s*(?<suffix>[万萬亿億千kKmMwW])?",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     var match = regex.Match(text);
-    if (match.Success && int.TryParse(
-            match.Groups[1].Value.Replace(",", string.Empty, StringComparison.Ordinal),
-            NumberStyles.None,
-            CultureInfo.InvariantCulture,
-            out var value))
+    if (match.Success && TryParseCount(match, out var value))
     {
       return Observed<int>.From(value);
     }
@@ -282,6 +299,33 @@ public static partial class DiscuzPageParser
     return labels.Any(label => text.Contains(label, StringComparison.OrdinalIgnoreCase))
         ? Observed<int>.Empty()
         : Observed<int>.Unobservable();
+  }
+
+  private static bool TryParseCount(Match match, out int value)
+  {
+    value = 0;
+    var numberText = match.Groups["number"].Value.Replace(",", string.Empty, StringComparison.Ordinal);
+    if (!decimal.TryParse(numberText, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number))
+    {
+      return false;
+    }
+
+    var multiplier = match.Groups["suffix"].Value.ToLowerInvariant() switch
+    {
+      "万" or "萬" or "w" => 10_000m,
+      "亿" or "億" => 100_000_000m,
+      "千" or "k" => 1_000m,
+      "m" => 1_000_000m,
+      _ => 1m
+    };
+    var scaled = decimal.Round(number * multiplier, 0, MidpointRounding.AwayFromZero);
+    if (scaled < 0 || scaled > int.MaxValue)
+    {
+      return false;
+    }
+
+    value = (int)scaled;
+    return true;
   }
 
   private static Observed<string> ObserveSecret(
@@ -587,4 +631,7 @@ public static partial class DiscuzPageParser
 
   [GeneratedRegex(@"(?:提取码|提取碼|访问码|訪問碼|access\s*code)\s*[:：=]?\s*([^\s，,。；;|]+)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
   private static partial Regex AccessCodeRegex();
+
+  [GeneratedRegex(@"^[\s\[【(（]+([^\]】)）]+)[\s\]】)）]+", RegexOptions.CultureInvariant)]
+  private static partial Regex BracketedTypeRegex();
 }

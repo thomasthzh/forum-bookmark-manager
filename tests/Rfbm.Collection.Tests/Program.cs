@@ -53,6 +53,7 @@ try
   await OptionalNetworkRecoveryFailureDegradesGracefullyAsync(testRoot);
   await MihomoRecoveryUsesOnlyConfiguredControllerAsync();
   SnapshotClassifierRejectsLoginAndChallengePages();
+  SnapshotClassifierRecognizesDiscuzLoginPrompt();
   SnapshotClassifierDoesNotTreatDiscussionTextAsAChallenge();
   PlaywrightRejectsRepositoryAndDefaultEdgeProfiles();
   PlaywrightProfileGuardDoesNotDependOnCurrentDirectory(testRoot);
@@ -163,6 +164,25 @@ static void SnapshotClassifierRejectsLoginAndChallengePages()
   TestAssert.Equal(
       SnapshotClassification.Content,
       PlaywrightSnapshotClassifier.Classify("<article>ordinary forum post</article>"));
+}
+
+static void SnapshotClassifierRecognizesDiscuzLoginPrompt()
+{
+  const string prompt = """
+      <!doctype html><html><head><title>提示信息 - 示例站点</title></head>
+      <body><div class="msg">请先登录后才能继续浏览</div>
+      <script>window.location = 'member.php?mod=logging&action=login';</script>
+      </body></html>
+      """;
+
+  TestAssert.Equal(
+      SnapshotClassification.LoginRequired,
+      PlaywrightSnapshotClassifier.Classify(prompt));
+
+  TestAssert.Equal(
+      SnapshotClassification.Content,
+      PlaywrightSnapshotClassifier.Classify(
+          "<article><p>说明：请先登录后才能继续浏览。</p></article>"));
 }
 
 static void SnapshotClassifierDoesNotTreatDiscussionTextAsAChallenge()
