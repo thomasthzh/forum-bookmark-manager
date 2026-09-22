@@ -1,18 +1,19 @@
 @echo off
+setlocal
 cd /d "%~dp0"
-set "PYTHONPATH=%CD%\src;%PYTHONPATH%"
-if not exist "config\settings.toml" if exist "config\settings.example.toml" (
-  copy "config\settings.example.toml" "config\settings.toml" >nul
+
+if exist "dist\win-x64\Rfbm.Native.exe" (
+  start "R-fbm" "dist\win-x64\Rfbm.Native.exe"
+  exit /b 0
 )
-python -c "import forum_bookmark_manager, fastapi, uvicorn, playwright" >nul 2>nul
+
+where dotnet >nul 2>nul
 if errorlevel 1 (
-  echo Installing required Python packages...
-  python -m pip install -e .
-  if errorlevel 1 (
-    echo Failed to install dependencies.
-    pause
-    exit /b 1
-  )
+  echo R-fbm has not been published and the .NET 8 SDK was not found.
+  echo Run scripts\publish.ps1 on a machine with the .NET 8 SDK first.
+  pause
+  exit /b 1
 )
-python -m forum_bookmark_manager.cli open
-if errorlevel 1 pause
+
+start "R-fbm" dotnet run --project "src\Rfbm.Native\Rfbm.Native.csproj"
+exit /b 0

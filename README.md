@@ -1,123 +1,104 @@
-# Forum Bookmark Manager
+# R-fbm · 论坛藏宝阁
 
-本工具用于把 Discuz 风格论坛的收藏页抓取到本地 SQLite 数据库，并用本地中文网页浏览、筛选、标记和查看图片。
+R-fbm 是一个 Windows 本地论坛收藏管理器：完整遍历 Discuz 收藏分页，把帖子正文信息、最多 9 张正文图片、密码/提取码、资源链接及上下文保存到 SQLite，再用原生桌面界面搜索、整理和重新发现。
 
-## 功能
-
-- 从你提供的收藏页链接开始自动翻页，抓取收藏帖。
-- 保存标题、正文摘要、图片、解压密码、下载链接说明、分类、收藏时间和访问/下载/收藏次数。
-- 图片下载到本地，网盘、磁力、附件等资源链接只保存文本，不自动下载。
-- 支持主站与镜像站交替访问；镜像地址由本地配置或爬取弹窗填写。
-- 支持可选的 Clash/Mihomo 兼容代理控制器联动，在站点无响应时尝试切换匹配线路。
-- Web UI 支持状态筛选、类型筛选、搜索、批量标记、批量删除、大图预览和图片浏览。
-
-## 安装
-
-需要 Python 3.13+ 和 Microsoft Edge。
-
-```powershell
-python -m pip install -e .
-```
-
-运行测试：
-
-```powershell
-python -m pip install -e ".[dev]"
-python -m pytest -q
-```
-
-## 配置
-
-公开仓库只提供示例配置：
+当前主线已经从旧 Python Web 管理器重构为：
 
 ```text
-config/settings.example.toml
+.NET 8 + WPF + SQLite + AngleSharp + Playwright .NET
+                              + Edge MV3 手动快照/标注
+                              + 可选 Mihomo 线路恢复
 ```
 
-首次使用时复制为本地私有配置：
+## 已实现
+
+- 以 `(site_family, thread_id)` 识别主站、镜像、query URL 与伪静态 URL 中的同一帖子。
+- 证明式遍历全部收藏分页；缺页不会伪报成功。
+- 持久化 frontier/work checkpoint，崩溃、取消或部分失败后只重试未完成项。
+- 帖子、子资源、快照与 checkpoint 先原子 capture，图片按 capture 代际隔离落盘后再幂等 finalize；中途取消、超时或 stale worker 不会覆盖旧好图，也不会把半成品误标为完成。
+- 首楼解析：标题、分类、收藏时间、浏览/收藏/下载计数、正文、解压密码/提取码、资源链接和附近说明。
+- 只下载帖子正文图片，最多 9 张；绝不自动下载网盘、磁力、附件或资源链接。
+- 图片大小、MIME、文件签名、公开网络地址和原子写入校验。
+- 可见 Edge 人工登录/验证码；批量阶段使用 R-fbm 独立 profile，不读取默认 Edge profile。
+- 主站瞬态网络失败后尝试已配置镜像；全部失败后才可选择调用本机 Mihomo。
+- 中文三栏 WPF 管理器：全文搜索、类型/状态/星标筛选、批量状态、标签、笔记、回收站、随机重逢。
+- Edge 扩展桥接：手动帖子/收藏页快照直接解析入库，选择器配置原子保存；原始 HTML 不落盘。
+- 旧 Python SQLite 只读导入，不修改源数据库。
+
+## 快速开始
+
+开发环境需要 Windows 10/11、Microsoft Edge 和 .NET 8 SDK。双击 `start_manager.bat`，或运行：
 
 ```powershell
-Copy-Item config/settings.example.toml config/settings.toml
+dotnet run --project src\Rfbm.Native\Rfbm.Native.csproj
 ```
 
-然后把 `start_url`、`site_base_urls`、代理和控制器设置改成你自己的环境。`config/settings.toml` 已被 `.gitignore` 排除，不会提交到仓库。
-
-## 打开软件
-
-Windows 下可以直接双击：
+本地数据默认存放在：
 
 ```text
-start_manager.bat
+%LocalAppData%\R-fbm\
+├── rfbm.sqlite3
+├── images\
+├── edge-profile\
+├── selector-profiles\
+└── logs\
 ```
 
-脚本会先设置本地 `src` 路径；如果依赖缺失，会自动执行 `python -m pip install -e .`。启动失败时窗口会停住并显示错误。
+测试或便携场景可在启动前设置 `RFBM_DATA_DIR`，把全部运行数据隔离到指定目录。运行数据、cookie、浏览器 profile、日志和图片均被 Git 忽略。
 
-命令行方式：
+## 构建、验证与发布
 
 ```powershell
-python -m forum_bookmark_manager.cli open
+dotnet restore R-fbm.sln
+dotnet build R-fbm.sln -c Release --no-restore
+powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 -NoRestore
+powershell -ExecutionPolicy Bypass -File scripts\publish.ps1
 ```
 
-默认地址：
-
-```text
-http://127.0.0.1:53102
-```
-
-关闭后台服务：
-
-```text
-stop_manager.bat
-```
-
-或：
+发布结果位于 `dist\win-x64\`，默认需要已安装 .NET 8 Desktop Runtime。需要自包含包时使用：
 
 ```powershell
-python -m forum_bookmark_manager.cli stop
+powershell -ExecutionPolicy Bypass -File scripts\publish.ps1 -SelfContained
 ```
 
-## 爬取流程
+项目使用轻量 console 测试 runner，以避开本机 VSTest testhost loopback 不稳定问题。验证脚本会运行 Core、Data、BrowserBridge、Collection、Native 五套 runner，以及 Edge 扩展 JavaScript 语法检查。
 
-1. 打开本地 Web UI。
-2. 点击 `开始爬取`。
-3. 输入收藏页链接和可选镜像网址。
-4. 在弹出的可见 Edge 窗口中手动完成登录或验证。
-5. 关闭验证标签页后，程序会复用独立的 `data/edge-profile` 并开始无头爬取。
+## 批量采集
 
-也可以直接命令行爬取：
+1. 在主界面点击“开始采集”。
+2. 填入论坛收藏页 URL；站点标识留空时会按主机名生成。
+3. 如有镜像，每行填一个 origin，例如 `https://mirror.example.com`。
+4. 推荐保留“先打开可见 Edge 完成登录验证”。完成登录或验证码后关闭验证页，程序才进入批量阶段。
+5. 可选展开 Mihomo 设置。控制器必须是显式回环 IP（如 `127.0.0.1`）；密钥只存在于当前内存会话。
 
-```powershell
-python -m forum_bookmark_manager.cli crawl --start-url "https://forum.example.test/home.php?mod=space&do=favorite&type=all&page=1"
-```
+程序会显示分页、帖子、失败计数和等待人工操作状态。取消和关闭窗口都会保留可恢复检查点。
 
-## 本地数据
+## Edge 手动桥接
 
-以下内容都是本地私有数据，默认不会进入 Git：
+1. 点击主界面“扩展桥接”，复制界面显示的扩展目录。
+2. 打开 `edge://extensions`，启用开发人员模式，选择“加载解压缩的扩展”。
+3. 把 Edge 显示的 32 位扩展 ID 和稳定站点标识填回 R-fbm，启动本地桥接。
+4. 在论坛页点击扩展图标发送当前页；或右键选择“为 R-fbm 标注页面区域”。
 
-- `data/bookmarks.sqlite3`：SQLite 数据库
-- `data/images/`：下载原图
-- `data/thumbnails/`：缩略图
-- `data/edge-profile/`：独立 Edge 登录态
-- `data/selector-profile.json`：标注模式保存的选择器
-- `config/settings.toml`：你的真实站点、镜像、代理和控制器配置
+接收器仅监听 `127.0.0.1:53112`，要求精确的 `chrome-extension://<ID>` Origin、随机会话 nonce、大小和 SHA-256 校验。扩展不申请 cookie 权限，只在用户点击时读取当前标签页。
 
-## 发布隐私
+## 架构
 
-公开仓库只应包含源码、测试、文档和示例配置。发布前执行：
+- `src/Rfbm.Core`：稳定身份、三态观察值、Discuz 解析与页面验证。
+- `src/Rfbm.Data`：版本化 SQLite schema、查询、原子 upsert、回收站和旧库导入。
+- `src/Rfbm.Collection`：采集会话、持久 frontier、并发、恢复、Playwright、镜像/Mihomo 和图片安全。
+- `src/Rfbm.BrowserBridge`：受来源约束的 loopback 消息协议。
+- `src/Rfbm.Native`：WPF 产品界面和桌面工作流。
+- `extension/edge`：Manifest V3 手动快照与选择器标注。
 
-```powershell
-git check-ignore data/bookmarks.sqlite3 data/edge-profile config/settings.toml
-git grep -n -I -E "uid=[0-9]{4,}|C:\\\\Users\\\\" -- . ":(exclude)tests"
-```
+详细需求与不变量见 `docs/superpowers/specs/2026-08-24-rfbm-native-refactor-design.md`，实施步骤见 `docs/superpowers/plans/2026-08-24-rfbm-native-refactor.md`，同类项目与技术取舍见 `docs/ai/similar-projects-and-technical-route.md`。
 
-如需发布包：
+## 明确不做
 
-```powershell
-python -m build
-```
+- 不绕过验证码、登录或站点安全策略。
+- 不自动下载网盘、磁力、附件和帖子中的资源文件。
+- 不读取或复用用户默认 Edge profile。
+- 不把本地收藏、cookie、HTML、日志或图片上传到云端。
+- 不复制 AGPL 项目的实现代码；同类项目仅用于产品与架构参考。
 
-## 注意
-
-- 本工具不会绕过验证码、人机验证、年龄验证或站点反爬限制。
-- 登录和验证必须由用户自己在可见浏览器窗口完成。
-- 请只抓取你有权限访问和保存的内容。
+旧 Python 源码与 72 个测试暂时保留为迁移规格和兼容参考，不再是默认运行入口。

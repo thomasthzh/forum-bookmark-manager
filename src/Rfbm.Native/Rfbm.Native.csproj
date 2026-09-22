@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rfbm.Core\Rfbm.Core.csproj" />
+    <ProjectReference Include="..\Rfbm.Data\Rfbm.Data.csproj" />
+    <ProjectReference Include="..\Rfbm.BrowserBridge\Rfbm.BrowserBridge.csproj" />
+    <ProjectReference Include="..\Rfbm.Collection\Rfbm.Collection.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\extension\edge\**\*"
+             Link="edge-extension\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+</Project>
